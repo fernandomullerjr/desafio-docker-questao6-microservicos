@@ -4,7 +4,7 @@ services:
   flask:
     build:
       context: ./rotten-potatoes-ms
-      dockerfile: ./rotten-potatoes-ms/Dockerfile-Python.dockerfile
+      dockerfile: Dockerfile-Python.dockerfile
     container_name: flask
     image: fernandomj90/app-rotten-potatoes-microservicos:v1
     ports:
@@ -51,6 +51,48 @@ services:
     networks:
       - backend
 
+  movies:
+    image: fernandomj90/app-rotten-potatoes-movies:v1
+    container_name: movies
+    build:
+      context: ./movie/src
+      dockerfile: Dockerfile-NodeJS.dockerfile
+    ports:
+      - "8181:8181"
+    networks:
+      - backend
+    depends_on:
+      - mongodb
+    environment:
+      - MONGODB_URI=mongodb://mongouser:mongopwd@mongodb:27017/admin
+
+  postgres:
+    image: postgres:14.1-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=pguser
+      - POSTGRES_PASSWORD=Pg@123
+    ports:
+      - '5432:5432'
+    volumes: 
+      - postgresdb:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  review:
+    build:
+      context: ./review/src/Review.Web/
+      dockerfile: Dockerfile-C-Sharp.dockerfile
+    container_name: review
+    image: fernandomj90/app-rotten-potatoes-review:v1
+    ports:
+      - 8282:8282
+    depends_on:
+      - postgres
+    networks:
+      - frontend
+      - backend
+
 #  webserver:
 #    build:
 #      context: nginx
@@ -82,5 +124,6 @@ networks:
 
 volumes:
   mongodbdata:
+  postgresdb:
 #  appvolume:
 #  nginxdata:
